@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "output-enhanced-recipe.schema.json",
+  "title": "Enhanced Recipe Output",
+  "description": "Schema for enhanced recipe JSON files produced by the pipeline",
+  "type": "object",
+  "required": [
+    "recipe_id",
+    "original_recipe_id",
+    "title",
+    "ingredients",
+    "instructions",
+    "modifications_applied",
+    "enhancement_summary",
+    "created_at",
+    "pipeline_version"
+  ],
+  "properties": {
+    "recipe_id": {
+      "type": "string",
+      "pattern": "^enhanced_[a-zA-Z0-9_-]+$",
+      "description": "Enhanced recipe ID"
+    },
+    "original_recipe_id": {
+      "type": "string",
+      "description": "Reference to source recipe"
+    },
+    "title": {
+      "type": "string",
+      "description": "Recipe title (may be enhanced)"
+    },
+    "description": {
+      "type": "string"
+    },
+    "servings": { "type": "string" },
+    "prep_time": { "type": "string" },
+    "cook_time": { "type": "string" },
+    "total_time": { "type": "string" },
+    "ingredients": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Modified ingredients list"
+    },
+    "instructions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Modified instructions list"
+    },
+    "modifications_applied": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/modificationApplied" },
+      "description": "Full audit trail of modifications"
+    },
+    "enhancement_summary": {
+      "$ref": "#/$defs/enhancementSummary"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pipeline_version": {
+      "type": "string",
+      "default": "1.0.0"
+    }
+  },
+  "$defs": {
+    "modificationApplied": {
+      "type": "object",
+      "required": ["source_review", "modification_type", "reasoning", "changes_made"],
+      "properties": {
+        "source_review": {
+          "$ref": "#/$defs/sourceReview"
+        },
+        "modification_type": {
+          "type": "string",
+          "enum": [
+            "ingredient_substitution",
+            "quantity_adjustment",
+            "technique_change",
+            "addition",
+            "removal"
+          ]
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "Why this modification was applied"
+        },
+        "changes_made": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/changeRecord" }
+        }
+      }
+    },
+    "sourceReview": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string" },
+        "reviewer": { "type": "string" },
+        "rating": { "type": "integer", "minimum": 1, "maximum": 5 }
+      }
+    },
+    "changeRecord": {
+      "type": "object",
+      "required": ["type", "from_text", "to_text", "operation"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ingredient", "instruction"]
+        },
+        "from_text": { "type": "string" },
+        "to_text": { "type": "string" },
+        "operation": {
+          "type": "string",
+          "enum": ["replace", "add", "remove"]
+        }
+      }
+    },
+    "enhancementSummary": {
+      "type": "object",
+      "required": ["total_changes", "change_types", "expected_impact"],
+      "properties": {
+        "total_changes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "change_types": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "expected_impact": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

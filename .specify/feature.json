@@ -1,0 +1,6 @@
+{
+  "feature_name": "Recipe Enhancement Pipeline Fix",
+  "feature_directory": ".specify/memory",
+  "branch": "fix/multi-modification-parsing",
+  "created_at": "2026-09-08"
+}

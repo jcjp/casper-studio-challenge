@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "input-recipe.schema.json",
+  "title": "Recipe Input",
+  "description": "Schema for input recipe JSON files consumed by the enhancement pipeline",
+  "type": "object",
+  "required": ["recipe_id", "title", "ingredients", "instructions"],
+  "properties": {
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Source URL where recipe was scraped"
+    },
+    "scraped_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the recipe was scraped"
+    },
+    "recipe_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique recipe identifier"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Recipe name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Recipe summary"
+    },
+    "rating": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "string" },
+        "count": { "type": "string" }
+      }
+    },
+    "preptime": {
+      "type": "string",
+      "pattern": "^PT[0-9]+[HM]$",
+      "description": "ISO 8601 duration"
+    },
+    "cooktime": {
+      "type": "string",
+      "pattern": "^PT[0-9]+[HM]$"
+    },
+    "totaltime": {
+      "type": "string",
+      "pattern": "^PT[0-9]+[HM]$"
+    },
+    "servings": {
+      "type": "string"
+    },
+    "ingredients": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "List of ingredients with quantities"
+    },
+    "instructions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Step-by-step instructions"
+    },
+    "nutrition": {
+      "type": "object",
+      "description": "Nutritional information"
+    },
+    "reviews": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/review"
+      },
+      "description": "User reviews for this recipe"
+    }
+  },
+  "$defs": {
+    "review": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Full review text"
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Star rating (1-5)"
+        },
+        "username": {
+          "type": "string",
+          "description": "Reviewer username"
+        },
+        "has_modification": {
+          "type": "boolean",
+          "default": false,
+          "description": "True if review contains actionable modification"
+        }
+      }
+    }
+  }
+}
