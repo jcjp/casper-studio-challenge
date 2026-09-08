@@ -195,7 +195,12 @@ Now extract from this review:
 def build_simple_prompt(
     review_text: str, title: str, ingredients: list, instructions: list
 ) -> str:
-    """Build a simple prompt without examples for faster processing."""
+    """Build a simple prompt without examples for faster processing.
+
+    Returns a prompt that requests an ARRAY of modifications, since a single
+    review may contain multiple discrete modifications (e.g., "I added an egg
+    AND halved the sugar" = 2 modifications).
+    """
     return f"""{SYSTEM_PROMPT}
 
 Original Recipe:
@@ -205,21 +210,30 @@ Instructions: {instructions}
 
 User Review: "{review_text}"
 
-Extract the recipe modifications from this review. The user has made changes to improve the recipe.
+Extract ALL recipe modifications from this review. A single review may contain MULTIPLE discrete modifications.
+For example, "I added an egg and halved the sugar" contains TWO modifications: one addition, one quantity_adjustment.
 
-Output a JSON object with this structure:
+Output a JSON object with an array of modifications:
 {{
-    "modification_type": "quantity_adjustment|ingredient_substitution|technique_change|addition|removal",
-    "reasoning": "Brief explanation of why this modification improves the recipe",
-    "edits": [
+    "modifications": [
         {{
-            "target": "ingredients|instructions",
-            "operation": "replace|add_after|remove",
-            "find": "exact text to find",
-            "replace": "replacement text (for replace operations)",
-            "add": "text to add (for add_after operations)"
+            "modification_type": "quantity_adjustment|ingredient_substitution|technique_change|addition|removal",
+            "reasoning": "Brief explanation of why this modification improves the recipe",
+            "edits": [
+                {{
+                    "target": "ingredients|instructions",
+                    "operation": "replace|add_after|remove",
+                    "find": "exact text to find",
+                    "replace": "replacement text (for replace operations)",
+                    "add": "text to add (for add_after operations)"
+                }}
+            ]
         }}
     ]
 }}
 
-Focus on concrete changes the user actually made, not general suggestions."""
+Important:
+- Extract EVERY discrete modification, not just the first one
+- Each modification should have its own entry in the array
+- If the review contains no actionable modifications, return {{"modifications": []}}
+- Focus on concrete changes the user actually made, not general suggestions."""

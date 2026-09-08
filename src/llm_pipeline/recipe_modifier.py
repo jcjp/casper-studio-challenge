@@ -98,9 +98,18 @@ class RecipeModifier:
                     operation="replace"
                 ))
 
-                logger.info(f"Replaced '{edit.find}' with '{edit.replace}' (similarity: {score:.2f})")
+                # NFR-003: Log confidence scores for fuzzy matches
+                confidence_level = "HIGH" if score >= 0.8 else "MEDIUM" if score >= 0.6 else "LOW"
+                logger.info(
+                    f"FUZZY_MATCH: Replaced '{edit.find}' with '{edit.replace}' "
+                    f"(confidence={score:.2f}, level={confidence_level})"
+                )
             else:
-                logger.warning(f"Could not find '{edit.find}' in {edit.target} (best similarity: {score:.2f})")
+                # NFR-003: Log confidence scores for failed matches
+                logger.warning(
+                    f"FUZZY_MATCH_FAILED: Could not find '{edit.find}' in {edit.target} "
+                    f"(best_score={score:.2f}, threshold={self.similarity_threshold})"
+                )
 
         elif edit.operation == "add_after":
             # Add new content after finding target
@@ -116,9 +125,17 @@ class RecipeModifier:
                     operation="add"
                 ))
 
-                logger.info(f"Added '{edit.add}' after '{edit.find}' (similarity: {score:.2f})")
+                # NFR-003: Log confidence scores for fuzzy matches
+                confidence_level = "HIGH" if score >= 0.8 else "MEDIUM" if score >= 0.6 else "LOW"
+                logger.info(
+                    f"FUZZY_MATCH: Added '{edit.add}' after '{edit.find}' "
+                    f"(confidence={score:.2f}, level={confidence_level})"
+                )
             else:
-                logger.warning(f"Could not find target '{edit.find}' for addition")
+                logger.warning(
+                    f"FUZZY_MATCH_FAILED: Could not find target '{edit.find}' for addition "
+                    f"(best_score={score:.2f}, threshold={self.similarity_threshold})"
+                )
 
         elif edit.operation == "remove":
             # Remove matching content
@@ -134,9 +151,17 @@ class RecipeModifier:
                     operation="remove"
                 ))
 
-                logger.info(f"Removed '{edit.find}' (similarity: {score:.2f})")
+                # NFR-003: Log confidence scores for fuzzy matches
+                confidence_level = "HIGH" if score >= 0.8 else "MEDIUM" if score >= 0.6 else "LOW"
+                logger.info(
+                    f"FUZZY_MATCH: Removed '{edit.find}' "
+                    f"(confidence={score:.2f}, level={confidence_level})"
+                )
             else:
-                logger.warning(f"Could not find '{edit.find}' to remove")
+                logger.warning(
+                    f"FUZZY_MATCH_FAILED: Could not find '{edit.find}' to remove "
+                    f"(best_score={score:.2f}, threshold={self.similarity_threshold})"
+                )
 
         return modified_content, change_records
 

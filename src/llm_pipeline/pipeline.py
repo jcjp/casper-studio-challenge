@@ -119,6 +119,8 @@ class LLMAnalysisPipeline:
         """
         Process a single recipe through the complete pipeline.
 
+        Extracts ALL modifications from ALL reviews and applies them sequentially.
+
         Args:
             recipe_file: Path to recipe JSON file
             save_output: Whether to save the enhanced recipe
@@ -126,6 +128,24 @@ class LLMAnalysisPipeline:
         Returns:
             EnhancedRecipe if successful, None otherwise
         """
+        import time
+
+        start_time = time.time()
+        summary_log = {
+            "recipe_file": recipe_file,
+            "recipe_id": None,
+            "recipe_title": None,
+            "reviews_total": 0,
+            "reviews_with_modifications": 0,
+            "reviews_processed": 0,
+            "modifications_extracted": 0,
+            "modifications_applied": 0,
+            "changes_made": 0,
+            "status": "pending",
+            "error": None,
+            "processing_time_seconds": 0,
+        }
+
         try:
             logger.info(f"Processing recipe file: {recipe_file}")
 
@@ -134,44 +154,73 @@ class LLMAnalysisPipeline:
             recipe = self.parse_recipe_data(recipe_data)
             reviews = self.parse_reviews_data(recipe_data)
 
+            summary_log["recipe_id"] = recipe.recipe_id
+            summary_log["recipe_title"] = recipe.title
+            summary_log["reviews_total"] = len(reviews)
+
+            modification_reviews = [r for r in reviews if r.has_modification]
+            summary_log["reviews_with_modifications"] = len(modification_reviews)
+
             logger.info(f"Loaded recipe: {recipe.title}")
             logger.info(
-                f"Found {len(reviews)} reviews, {len([r for r in reviews if r.has_modification])} with modifications"
+                f"Found {len(reviews)} reviews, {len(modification_reviews)} with modifications"
             )
 
-            if not any(r.has_modification for r in reviews):
-                logger.warning("No reviews with modifications found")
+            # Handle recipe with 0 modification reviews gracefully (T020-T021)
+            if not modification_reviews:
+                logger.warning(
+                    f"No reviews with modifications found for recipe: {recipe.title}. "
+                    "Skipping enhancement."
+                )
+                summary_log["status"] = "skipped_no_modifications"
+                self._log_summary(summary_log, start_time)
                 return None
 
-            # Step 1: Extract modification from one random review
-            logger.info("Step 1: Extracting modification from a single review...")
-            modification, source_review = (
-                self.tweak_extractor.extract_single_modification(reviews, recipe)
+            # Step 1: Extract ALL modifications from ALL reviews
+            logger.info("Step 1: Extracting modifications from ALL reviews...")
+            modifications_with_reviews = self.tweak_extractor.extract_all_modifications(
+                reviews, recipe
             )
 
-            if not modification or not source_review:
-                logger.warning("No modification could be extracted")
+            summary_log["reviews_processed"] = len(
+                set(r.text for _, r in modifications_with_reviews)
+            )
+            summary_log["modifications_extracted"] = len(modifications_with_reviews)
+
+            if not modifications_with_reviews:
+                logger.warning("No modifications could be extracted from any review")
+                summary_log["status"] = "no_modifications_extracted"
+                self._log_summary(summary_log, start_time)
                 return None
 
             logger.info(
-                f"Successfully extracted {modification.modification_type} modification"
+                f"Successfully extracted {len(modifications_with_reviews)} modifications "
+                f"from reviews"
             )
 
-            # Step 2: Apply modification to recipe
-            logger.info("Step 2: Applying modification to recipe...")
-            modified_recipe, change_records = self.recipe_modifier.apply_modification(
-                recipe, modification
+            # Step 2: Apply ALL modifications to recipe sequentially
+            logger.info("Step 2: Applying all modifications to recipe...")
+
+            # Extract just the modifications for batch application
+            modifications = [mod for mod, _ in modifications_with_reviews]
+            modified_recipe, all_change_records = (
+                self.recipe_modifier.apply_modifications_batch(recipe, modifications)
             )
 
-            logger.info(
-                f"Applied modification: {len(change_records)} total changes made"
-            )
+            total_changes = sum(len(cr) for cr in all_change_records)
+            summary_log["modifications_applied"] = len(modifications)
+            summary_log["changes_made"] = total_changes
 
-            # Step 3: Generate enhanced recipe with attribution
-            logger.info("Step 3: Generating enhanced recipe with attribution...")
+            logger.info(f"Applied {len(modifications)} modifications: {total_changes} total changes made")
 
-            enhanced_recipe = self.enhanced_generator.generate_enhanced_recipe(
-                recipe, modified_recipe, modification, source_review, change_records
+            # Step 3: Generate enhanced recipe with attribution for ALL modifications
+            logger.info("Step 3: Generating enhanced recipe with full attribution...")
+
+            enhanced_recipe = self.enhanced_generator.generate_enhanced_recipe_multi(
+                recipe,
+                modified_recipe,
+                modifications_with_reviews,
+                all_change_records,
             )
 
             logger.info(f"Generated enhanced recipe: {enhanced_recipe.title}")
@@ -184,6 +233,9 @@ class LLMAnalysisPipeline:
                     enhanced_recipe, str(output_path)
                 )
 
+            summary_log["status"] = "success"
+            self._log_summary(summary_log, start_time)
+
             return enhanced_recipe
 
         except Exception as e:
@@ -191,7 +243,27 @@ class LLMAnalysisPipeline:
             import traceback
 
             traceback.print_exc()
+            summary_log["status"] = "error"
+            summary_log["error"] = str(e)
+            self._log_summary(summary_log, start_time)
             return None
+
+    def _log_summary(self, summary_log: Dict[str, Any], start_time: float) -> None:
+        """
+        Log structured JSON summary for a recipe run (NFR-001).
+
+        Args:
+            summary_log: Summary data dictionary
+            start_time: Processing start time
+        """
+        import time
+
+        summary_log["processing_time_seconds"] = round(time.time() - start_time, 2)
+
+        # Log as structured JSON
+        logger.info(
+            f"PIPELINE_SUMMARY: {json.dumps(summary_log, ensure_ascii=False)}"
+        )
 
     def process_recipe_directory(self, data_dir: str = "data") -> List[EnhancedRecipe]:
         """

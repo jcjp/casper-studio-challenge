@@ -45,6 +45,19 @@ class ModificationObject(BaseModel):
     edits: List[ModificationEdit] = Field(description="List of atomic edits to apply")
 
 
+class ModificationList(BaseModel):
+    """List of modifications extracted from a single review.
+
+    A review may contain multiple discrete modifications (e.g., "I added an egg
+    AND halved the sugar" = 2 modifications). This model wraps the array response.
+    """
+
+    modifications: List[ModificationObject] = Field(
+        default_factory=list,
+        description="All discrete modifications extracted from the review"
+    )
+
+
 class SourceReview(BaseModel):
     """Reference to the original review that suggested the modification."""
 
