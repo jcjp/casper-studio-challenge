@@ -15,10 +15,10 @@
 
 **Purpose**: Verify environment and understand current state
 
-- [ ] T001 Verify Python 3.13 and dependencies installed via `pip install -r requirements.txt`
-- [ ] T002 Verify OpenAI API key configured via `echo $OPENAI_API_KEY | head -c 10`
-- [ ] T003 Run existing pipeline to establish baseline via `python src/test_pipeline.py single 10813`
-- [ ] T004 Document current behavior (how many mods extracted?) in scratch notes
+- [x] T001 Verify Python 3.13 and dependencies installed via `pip install -r requirements.txt`
+- [x] T002 Verify OpenAI API key configured via `echo $OPENAI_API_KEY | head -c 10`
+- [x] T003 Run existing pipeline to establish baseline via `python src/test_pipeline.py single 10813`
+- [x] T004 Document current behavior (how many mods extracted?) in scratch notes
 
 ---
 
@@ -45,8 +45,8 @@
 
 ### Implementation
 
-- [ ] T009 [US1] Test extraction with "4 tweaks" review manually via Python REPL
-- [ ] T010 [US1] Verify 4 distinct `ModificationObject` instances returned
+- [x] T009 [US1] Test extraction with "4 tweaks" review manually via Python REPL
+- [x] T010 [US1] Verify 4 distinct `ModificationObject` instances returned
 - [x] T011 [US1] Add logging for each modification extracted in `src/llm_pipeline/tweak_extractor.py`
 - [x] T012 [US1] Handle edge case: review with no actionable modifications returns empty list
 
@@ -87,8 +87,8 @@
 - [x] T022 [US3] Improve fuzzy matching logging with confidence scores in `src/llm_pipeline/recipe_modifier.py`
 - [x] T023 [US3] Add retry logic (3x) for failed LLM calls per NFR-002 in `src/llm_pipeline/tweak_extractor.py`
 - [x] T024 [US3] Add structured JSON summary log per recipe run per NFR-001 in `src/llm_pipeline/pipeline.py`
-- [ ] T025 [US3] Run pipeline on all 6 recipes, fix any remaining edge case failures
-- [ ] T025a [US3] Verify non-modified recipe fields (title, description, cook_time, etc.) preserved in enhanced output
+- [x] T025 [US3] Run pipeline on all 6 recipes, fix any remaining edge case failures
+- [x] T025a [US3] Verify non-modified recipe fields (title, description, cook_time, etc.) preserved in enhanced output
 
 **Checkpoint**: 4+ recipes produce valid enhanced output (SC-002, SC-004 met)
 
@@ -98,14 +98,14 @@
 
 **Purpose**: Final verification, documentation, and cleanup
 
-- [ ] T026 [P] Verify quickstart.md validation scenarios pass
+- [x] T026 [P] Verify quickstart.md validation scenarios pass
 - [x] T027 [P] Write `ANALYSIS.md` documenting problems found and solutions
 - [x] T028 [P] Document technical decisions and trade-offs in `ANALYSIS.md`
 - [x] T029 [P] List future improvements in `ANALYSIS.md`
-- [ ] T030 Verify all success criteria met (SC-001 through SC-005)
-- [ ] T030a Verify every `modifications_applied` entry has valid `source_review` attribution
-- [ ] T031 Clean up any debug logging or temporary code
-- [ ] T032 Commit changes with clear commit message
+- [x] T030 Verify all success criteria met (SC-001 through SC-005)
+- [x] T030a Verify every `modifications_applied` entry has valid `source_review` attribution
+- [x] T031 Clean up any debug logging or temporary code
+- [x] T032 Commit changes with clear commit message
 
 ---
 
