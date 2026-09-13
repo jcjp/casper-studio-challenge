@@ -52,7 +52,7 @@ uv run python test_pipeline.py all
 
 ### Enhanced Recipes
 
-Enhanced recipes are saved in `src/data/enhanced/`:
+Enhanced recipes are saved in `data/enhanced/`:
 
 - `enhanced_[recipe_id]_[recipe-name].json` - Individual enhanced recipes with modifications applied
 - `pipeline_summary_report.json` - Summary of all processing results
